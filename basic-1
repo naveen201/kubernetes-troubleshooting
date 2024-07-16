@@ -1,0 +1,87 @@
+======================================ImagePullBackOff================================
+When a kubelet starts creating containers for a Pod using a container runtime, it might be possible the container is in Waiting state because of ImagePullBackOff.
+
+The status ImagePullBackOff means that a container could not start because Kubernetes could not pull a container image for reasons such as
+
+-->Invalid image name or
+-->Pulling from a private registry without imagePullSecret.
+The BackOff part indicates that Kubernetes will keep trying to pull the image, with an increasing back-off delay.
+
+Kubernetes raises the delay between each attempt until it reaches a compiled-in limit, which is 300 seconds (5 minutes).
+
+
+======================================CrashLoopBackOff================================
+When you see "CrashLoopBackOff," it means that kubelet is trying to run the container, but it keeps failing and crashing. After crashing, Kubernetes tries to restart the 
+container automatically, but if the container keeps failing repeatedly, you end up in a loop of crashes and restarts, thus the term "CrashLoopBackOff."
+This situation indicates that something is wrong with the application or the configuration that needs to be fixed.
+
+++++++++++++++++++++++++++++++++++++++++++
+Common Situations of CrashLoopBackOff
+Misconfigurations
+Misconfigurations can encompass a wide range of issues, from incorrect environment variables to improper setup of service ports or volumes. These misconfigurations can prevent the application from starting correctly, leading to crashes. For example, if an application expects a certain environment variable to connect to a database and that variable is not set or is incorrect, the application might crash as it cannot establish a database connection.
+
+Errors in the Liveness Probes
+Liveness probes in Kubernetes are used to check the health of a container. If a liveness probe is incorrectly configured, it might falsely report that the container is unhealthy, causing Kubernetes to kill and restart the container repeatedly. For example, if the liveness probe checks a URL or port that the application does not expose or checks too soon before the application is ready, the container will be repeatedly terminated and restarted.
+
+The Memory Limits Are Too Low
+If the memory limits set for a container are too low, the application might exceed this limit, especially under load, leading to the container being killed by Kubernetes. This can happen repeatedly if the workload does not decrease, causing a cycle of crashing and restarting. Kubernetes uses these limits to ensure that containers do not consume all available resources on a node, which can affect other containers.
+
+Wrong Command Line Arguments
+Containers might be configured to start with specific command-line arguments. If these arguments are wrong or lead to the application exiting (for example, passing an invalid option to a command), the container will exit immediately. Kubernetes will then attempt to restart it, leading to the CrashLoopBackOff status. An example would be passing a configuration file path that does not exist or is inaccessible.
+
+Bugs & Exceptions
+Bugs in the application code, such as unhandled exceptions or segmentation faults, can cause the application to crash. For instance, if the application tries to access a null pointer or fails to catch and handle an exception correctly, it might terminate unexpectedly. Kubernetes, detecting the crash, will restart the container, but if the bug is triggered each time the application runs, this leads to a repetitive crash loop.
+
+======================================Pods not schedulable================================
+In Kubernetes, the scheduler is responsible for assigning pods to nodes in the cluster based on various criteria. Sometimes, you might encounter situations where pods are
+not being scheduled as expected. This can happen due to factors such as node constraints, pod requirements, or cluster configurations.
+->Node Selector
+->Node Affinity
+->Taints
+->Tolerations
+
+======================Reasons for OOMKilled===============================
+The OOMKilled (Out of Memory Killed) error in Kubernetes occurs when a container exceeds its memory limit. The system's Out of Memory (OOM) killer terminates the container to free up memory for the node.
+
+Insufficient Memory Limits:
+If the memory limits set for the container are too low, the container might use more memory than allowed, triggering the OOM killer.
+Memory Leaks:
+If the application running inside the container has memory leaks, it will keep consuming more memory over time, eventually exceeding the limits.
+High Memory Demand:
+Certain operations or workloads might require more memory than usual, causing the container to exceed its memory limits temporarily.
+Improper Resource Requests and Limits:
+Incorrectly setting memory requests and limits can lead to containers competing for memory resources, leading to some being killed when the node runs out of memory.
+Burst Traffic or Load Spikes:
+Unexpected spikes in traffic or load can cause the application to use more memory, resulting in an OOMKilled event.
+
+                              =>>>>Diagnosing OOMKilled Errors
+Inspect Pod Status, Describe the Pod, Check Container Logs, Analyze Resource Usage of pod
+
+============================================Resource quotas at the namespace =======================================
+Resource quotas at the namespace level are crucial for effective resource management, ensuring fair allocation, maintaining cluster stability, controlling costs, supporting multi-tenancy, enabling capacity planning, enforcing quality of service, and providing operational control. They are a vital tool for any organization looking to manage their Kubernetes resources efficiently and effectively.
+
+==============================================resource limits at the pod level in Kubernetes ====================
+Setting resource limits at the pod level is essential for maintaining cluster stability, ensuring fair resource distribution, improving application performance and predictability, controlling costs, preventing resource contention, facilitating capacity planning, and enhancing overall cluster efficiency. By carefully defining resource requests and limits, you can create a more reliable, predictable, and efficient Kubernetes environment.
+=============================================upgrade cluster====================================================
+??
+??
+??
+
+
+===========================================in case of statefull set============
+for example there are 5 replicas but on applied manifest pods status are in pending then it will show only one pod because first is not successfully created.
+
+statefull set-->pvc->ebs->ebs provisioner --ebs-pv 
+
+
+===========================Network Policies in Kubernetes====================+++++++++++++++need netowrk plugins+++++++++ 
+control the communication between pods, services, and other network endpoints in a cluster. They act as a firewall for controlling traffic at the IP address or port level. By default, Kubernetes allows all traffic between pods within a cluster, but Network Policies provide a way to restrict this communication based on specified rules.
+++++++++++++
+Key Concepts
+Ingress: Traffic coming into a pod from another pod or external source.
+Egress: Traffic leaving a pod to another pod or external destination.
+Selectors: Labels that define which pods the Network Policy applies to.
+
++++++++++++++
+Why Use Network Policies?
+Enhanced Security,Isolation,Compliance,Control Traffic Flow
